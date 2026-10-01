@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "frontend: iniciar",
+            "label": "desarrollo: preparar",
             "type": "shell",
             "command": "powershell.exe",
             "args": [
@@ -10,30 +10,32 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                "${workspaceFolder}\\.vscode\\start-frontend.ps1"
+                "${workspaceFolder}\\.vscode\\start-dev.ps1"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "desarrollo: detener",
+            "type": "shell",
+            "command": "powershell.exe",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\.vscode\\stop-dev.ps1"
             ],
             "problemMatcher": [],
             "presentation": {
                 "reveal": "silent",
                 "panel": "dedicated",
-                "clear": true
-            }
-        },
-        {
-            "label": "frontend: detener",
-            "type": "shell",
-            "command": "powershell.exe",
-            "args": [
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "${workspaceFolder}\\.vscode\\stop-frontend.ps1"
-            ],
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "panel": "dedicated"
+                "showReuseMessage": false
             }
         }
     ]

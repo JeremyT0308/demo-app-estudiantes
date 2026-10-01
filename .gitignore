@@ -24,9 +24,11 @@ target/
 .vscode/*
 !.vscode/launch.json
 !.vscode/tasks.json
-!.vscode/start-frontend.ps1
-!.vscode/stop-frontend.ps1
+!.vscode/start-dev.ps1
+!.vscode/open-browser-when-ready.ps1
+!.vscode/stop-dev.ps1
 .vscode/.frontend.pid
+.vscode/.browser-watcher.pid
 
 ### macOS ###
 .DS_Store

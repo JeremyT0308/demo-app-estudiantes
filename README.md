@@ -34,20 +34,37 @@ La configuración hace este flujo automáticamente:
 ```text
 F5
  |
- +--> inicia frontend en http://localhost:5500
+ +--> comprueba si el frontend ya existe en el puerto 5500
  |
- +--> inicia Spring Boot en http://localhost:8080
+ +--> si hace falta, inicia el frontend como proceso separado
  |
- +--> espera a que Tomcat este listo
+ +--> el script termina y devuelve el control a VS Code
+ |
+ +--> inicia Spring Boot en Debug en el puerto 8080
+ |
+ +--> un watcher espera a que 8080 acepte conexiones
  |
  +--> abre http://localhost:5500 en el navegador
 ```
 
-Al detener Debug, VS Code también detiene el servidor de frontend que inició para esa sesión.
+El frontend se inicia como un proceso independiente para que la tarea previa no bloquee el arranque del debugger de Java. El navegador tampoco depende de leer un mensaje concreto de los logs de Tomcat: se abre cuando el puerto 8080 realmente está disponible.
+
+Al detener Debug, VS Code detiene el servidor de frontend que inició para esa sesión y también cancela el watcher si todavía estaba esperando.
 
 > Si el puerto 5500 ya estaba ocupado antes de presionar F5, la configuración reutiliza ese servidor y no lo cierra al terminar.
 
+> El puerto 8080 debe estar libre antes de iniciar `Aplicacion completa`. Si dejaste Spring Boot ejecutándose manualmente, detenlo primero para que el debugger pueda iniciar su propia instancia.
+
 También existe la opción `Backend solamente` para probar únicamente la API.
+
+Si quieres comprobar manualmente que ambos procesos quedaron activos:
+
+```powershell
+Test-NetConnection localhost -Port 8080
+Test-NetConnection localhost -Port 5500
+```
+
+En ambos casos `TcpTestSucceeded` debe aparecer como `True`.
 
 ## 3. API
 
@@ -225,8 +242,9 @@ http://localhost:5500
 .vscode/
 ├── launch.json
 ├── tasks.json
-├── start-frontend.ps1
-└── stop-frontend.ps1
+├── start-dev.ps1
+├── open-browser-when-ready.ps1
+└── stop-dev.ps1
 
 src/main/java/com/udla/arquitectura/demo/
 ├── DemoApplication.java

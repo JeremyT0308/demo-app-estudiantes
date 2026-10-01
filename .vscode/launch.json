@@ -6,21 +6,16 @@
             "name": "Aplicacion completa (Backend + Frontend)",
             "request": "launch",
             "mainClass": "com.udla.arquitectura.demo.DemoApplication",
-            "preLaunchTask": "frontend: iniciar",
-            "postDebugTask": "frontend: detener",
-            "console": "internalConsole",
-            "serverReadyAction": {
-                "action": "openExternally",
-                "pattern": "Tomcat started on port 8080.*",
-                "uriFormat": "http://localhost:5500"
-            }
+            "preLaunchTask": "desarrollo: preparar",
+            "postDebugTask": "desarrollo: detener",
+            "console": "integratedTerminal"
         },
         {
             "type": "java",
             "name": "Backend solamente",
             "request": "launch",
             "mainClass": "com.udla.arquitectura.demo.DemoApplication",
-            "console": "internalConsole"
+            "console": "integratedTerminal"
         }
     ]
 }
