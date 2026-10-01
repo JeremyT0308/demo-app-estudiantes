@@ -3,107 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#090909">
-    <title>Maison · Catálogo de productos</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="theme-color" content="#050505">
+    <meta name="color-scheme" content="dark">
+    <title>AUREUM · Product Atelier</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=5.0.0">
 </head>
 <body>
-<div class="ambient ambient--one" aria-hidden="true"></div>
-<div class="ambient ambient--two" aria-hidden="true"></div>
-
-<header class="hero">
-    <nav class="nav shell" aria-label="Navegación principal">
-        <a class="brand" href="#" aria-label="Inicio">
-            <span class="brand__mark">M</span>
-            <span class="brand__copy">
-                <strong>MAISON</strong>
-                <small>PRODUCT COLLECTION</small>
-            </span>
-        </a>
-        <div class="nav__status">
-            <span class="status-dot" aria-hidden="true"></span>
-            Spring Boot · API REST
-        </div>
-    </nav>
-
-    <div class="hero__content shell">
-        <div class="hero__copy">
-            <span class="eyebrow">Colección privada · ISWZ2202</span>
-            <h1>Detalles que convierten lo cotidiano en <em>extraordinario.</em></h1>
-            <p class="hero__lead">
-                Una experiencia de catálogo conectada a Spring Boot, con una interfaz sobria,
-                animaciones suaves y una arquitectura preparada para demostrar caché, proxy y CORS.
-            </p>
-            <div class="hero__meta" aria-label="Información técnica">
-                <span><b>API</b> localhost:8080</span>
-                <span><b>FRONT</b> localhost:5500</span>
-                <span><b>STACK</b> Java · Spring</span>
-            </div>
-        </div>
-
-        <div class="hero__monogram" aria-hidden="true">
-            <span>01</span>
-            <strong>M</strong>
-            <small>EST. 2026</small>
-        </div>
+    <div id="pageLoader" class="page-loader" aria-hidden="true">
+        <div class="page-loader__brand">A</div>
+        <div class="page-loader__line"><span></span></div>
     </div>
 
-    <div class="hero__line shell" aria-hidden="true"><span></span></div>
-</header>
+    <div class="noise" aria-hidden="true"></div>
+    <div id="cursorGlow" class="cursor-glow" aria-hidden="true"></div>
 
-<main class="shell main-content">
-    <section class="collection-heading">
+    <header class="site-header">
+        <nav class="nav shell" aria-label="Navegación principal">
+            <a class="brand magnetic" href="#top" aria-label="Aureum, inicio">
+                <span class="brand__gem">A</span>
+                <span class="brand__text">
+                    <strong>AUREUM</strong>
+                    <small>PRODUCT ATELIER</small>
+                </span>
+            </a>
+
+            <div class="nav__center" aria-hidden="true">
+                <span>SPRING BOOT</span>
+                <i></i>
+                <span>ISWZ2202</span>
+            </div>
+
+            <div class="nav__status">
+                <span class="pulse"></span>
+                <span>Live API</span>
+            </div>
+        </nav>
+    </header>
+
+    <main id="top">
+        <section class="hero shell">
+            <div class="hero__eyebrow reveal-up">
+                <span>01</span>
+                <i></i>
+                <span>Private Collection · 2026</span>
+            </div>
+
+            <div class="hero__grid">
+                <div class="hero__copy">
+                    <h1 class="hero-title">
+                        <span class="hero-title__line"><span>Objects of</span></span>
+                        <span class="hero-title__line hero-title__line--accent"><span>distinction.</span></span>
+                    </h1>
+
+                    <div class="hero__bottom reveal-up">
+                        <p>
+                            Una experiencia de catálogo donde el diseño premium se encuentra con una API REST
+                            construida en Java y Spring Boot.
+                        </p>
+                        <a class="text-link magnetic" href="#collection">
+                            <span>Explorar colección</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <aside class="hero__seal reveal-scale" aria-hidden="true">
+                    <div class="seal-ring seal-ring--outer"></div>
+                    <div class="seal-ring seal-ring--inner"></div>
+                    <span class="seal__micro">CURATED</span>
+                    <strong>A</strong>
+                    <span class="seal__year">MMXXVI</span>
+                </aside>
+            </div>
+
+            <div class="hero__specs reveal-up">
+                <div><span>Frontend</span><strong>localhost:5500</strong></div>
+                <div><span>API REST</span><strong>localhost:8080</strong></div>
+                <div><span>Architecture</span><strong>Cache · Proxy · CORS</strong></div>
+            </div>
+        </section>
+
+        <section class="marquee" aria-label="Tecnologías del proyecto">
+            <div class="marquee__track">
+                <span>JAVA 17</span><i>✦</i><span>SPRING BOOT</span><i>✦</i><span>CAFFEINE CACHE</span><i>✦</i><span>PROXY PATTERN</span><i>✦</i><span>CORS</span><i>✦</i>
+                <span>JAVA 17</span><i>✦</i><span>SPRING BOOT</span><i>✦</i><span>CAFFEINE CACHE</span><i>✦</i><span>PROXY PATTERN</span><i>✦</i><span>CORS</span><i>✦</i>
+            </div>
+        </section>
+
+        <section id="collection" class="collection shell">
+            <header class="collection__header reveal-up">
+                <div>
+                    <span class="kicker">The Collection</span>
+                    <h2>Curated essentials.</h2>
+                </div>
+                <p>
+                    Filtra la colección, consulta cada pieza y observa los tiempos de respuesta de la API.
+                    Una segunda consulta permite apreciar el efecto del caché.
+                </p>
+            </header>
+
+            <div class="control-deck reveal-up">
+                <label class="search-box">
+                    <span class="search-box__label">Search</span>
+                    <span class="search-box__inner">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+                        <input id="searchInput" type="search" placeholder="Nombre o categoría" autocomplete="off">
+                        <span class="search-box__key">/</span>
+                    </span>
+                </label>
+
+                <button id="reloadButton" class="lux-button magnetic" type="button">
+                    <span class="lux-button__fill"></span>
+                    <span class="lux-button__content">
+                        <span>Recargar API</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"></path><path d="M19 11a7 7 0 1 0 .2 4"></path></svg>
+                    </span>
+                </button>
+            </div>
+
+            <div class="api-status reveal-up" aria-live="polite">
+                <div class="api-status__left">
+                    <span class="pulse"></span>
+                    <span id="statusText">Conectando con la colección...</span>
+                </div>
+                <div class="api-status__right">
+                    <span>Response</span>
+                    <strong id="requestTime">—</strong>
+                </div>
+            </div>
+
+            <section id="productsGrid" class="products" aria-label="Productos"></section>
+
+            <section id="emptyState" class="empty-state" hidden>
+                <span>00</span>
+                <h3>No pieces found.</h3>
+                <p>Prueba con otro nombre o categoría.</p>
+            </section>
+        </section>
+
+        <section class="manifesto shell reveal-up">
+            <span class="manifesto__index">02</span>
+            <p>
+                “La primera consulta recorre el servicio, el Proxy y el repositorio.
+                La siguiente puede resolverse desde caché sin repetir el trabajo costoso.”
+            </p>
+            <span class="manifesto__signature">Aureum / Spring Study</span>
+        </section>
+    </main>
+
+    <footer class="footer shell">
         <div>
-            <span class="section-kicker">Selección</span>
-            <h2>Productos destacados</h2>
+            <span>AUREUM</span>
+            <small>Product Atelier · Academic Edition</small>
         </div>
-        <p>Consulta, filtra y abre cada producto para observar el comportamiento de la API en tiempo real.</p>
-    </section>
+        <div class="footer__tech">Java · Spring Boot · Cache · Proxy · CORS</div>
+    </footer>
 
-    <section class="toolbar glass-panel" aria-label="Filtros">
-        <label class="search">
-            <span class="search__label">Buscar en la colección</span>
-            <span class="search__control">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/>
-                </svg>
-                <input id="searchInput" type="search" placeholder="Nombre o categoría..." autocomplete="off">
-            </span>
-        </label>
-        <button id="reloadButton" class="button button--gold" type="button">
-            <span class="button__shine" aria-hidden="true"></span>
-            <span>Recargar API</span>
-        </button>
-    </section>
+    <dialog id="productDialog" class="product-dialog">
+        <div class="product-dialog__backdrop"></div>
+        <div class="product-dialog__panel">
+            <button id="closeDialog" class="dialog-close magnetic" aria-label="Cerrar detalle">
+                <span></span><span></span>
+            </button>
+            <div class="dialog-mark" aria-hidden="true">A</div>
+            <div id="dialogContent"></div>
+        </div>
+    </dialog>
 
-    <section class="status" aria-live="polite">
-        <span class="status__main">
-            <span class="status-dot" aria-hidden="true"></span>
-            <span id="statusText">Cargando productos...</span>
-        </span>
-        <span id="requestTime" class="status__time"></span>
-    </section>
-
-    <section id="productsGrid" class="products" aria-label="Productos"></section>
-
-    <section id="emptyState" class="empty glass-panel" hidden>
-        <span class="empty__number">00</span>
-        <h2>Sin resultados</h2>
-        <p>No encontramos productos que coincidan con la búsqueda.</p>
-    </section>
-</main>
-
-<footer class="footer shell">
-    <span>MAISON · PRODUCT COLLECTION</span>
-    <span>Spring Boot · Cache · Proxy · CORS</span>
-</footer>
-
-<dialog id="productDialog" class="dialog">
-    <button id="closeDialog" class="dialog__close" aria-label="Cerrar">×</button>
-    <div class="dialog__ornament" aria-hidden="true">M</div>
-    <div id="dialogContent"></div>
-</dialog>
-
-<script src="app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <script src="app.js?v=5.0.0" defer></script>
 </body>
 </html>

@@ -278,3 +278,9 @@ frontend/
 - **Separación de responsabilidades:** la caché está en service y el Proxy se concentra en interceptar/delegar.
 - **CORS:** permite que el frontend de desarrollo en `5500` consuma la API en `8080`.
 - **Automatización:** VS Code inicia todo con F5 para evitar comandos manuales durante desarrollo.
+
+## Frontend Luxury v5
+
+El frontend usa una identidad visual negra, blanca y dorada con animaciones CSS y mejoras progresivas mediante GSAP/ScrollTrigger desde CDN. Si la librería externa no está disponible, la API y la interfaz siguen funcionando; únicamente se reducen algunas animaciones.
+
+La automatización de VS Code ya no reutiliza un servidor arbitrario que esté escuchando en el puerto `5500`. Esto evita abrir accidentalmente un frontend perteneciente a otra copia del proyecto. Además, los archivos `styles.css` y `app.js` usan un query de versión para reducir problemas de caché del navegador durante desarrollo.

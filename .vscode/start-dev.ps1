@@ -7,8 +7,7 @@ $watcherPidFile = Join-Path $PSScriptRoot ".browser-watcher.pid"
 $frontendPort = 5500
 $backendPort = 8080
 
-# Antes de iniciar Debug comprobamos que no exista otro backend ocupando 8080.
-# Si dejamos dos instancias de Spring levantadas, el debugger no podria iniciar la nueva.
+# Evitamos arrancar una segunda instancia de Spring Boot sobre 8080.
 $backendListener = Get-NetTCPConnection -LocalPort $backendPort -State Listen -ErrorAction SilentlyContinue |
     Select-Object -First 1
 
@@ -16,59 +15,69 @@ if ($backendListener) {
     throw "El puerto $backendPort ya esta ocupado. Deten la instancia anterior de Spring Boot y vuelve a presionar F5."
 }
 
-# Limpiamos archivos de una ejecucion anterior que ya no tenga procesos activos.
-Remove-Item $frontendPidFile -ErrorAction SilentlyContinue
+# Si una ejecucion anterior de ESTE proyecto dejo el frontend abierto, lo cerramos primero.
+# Esto garantiza que F5 siempre sirva los archivos actuales y no una carpeta vieja.
+if (Test-Path $frontendPidFile) {
+    $oldFrontendPid = Get-Content $frontendPidFile -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($oldFrontendPid) {
+        $oldFrontend = Get-Process -Id $oldFrontendPid -ErrorAction SilentlyContinue
+        if ($oldFrontend) {
+            Stop-Process -Id $oldFrontendPid -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Milliseconds 350
+        }
+    }
+    Remove-Item $frontendPidFile -ErrorAction SilentlyContinue
+}
+
 Remove-Item $watcherPidFile -ErrorAction SilentlyContinue
 
+# No reutilizamos cualquier proceso que ya este en 5500.
+# Podria ser un servidor Python abierto desde otra copia del proyecto y mostrar un frontend antiguo.
 $frontendListener = Get-NetTCPConnection -LocalPort $frontendPort -State Listen -ErrorAction SilentlyContinue |
     Select-Object -First 1
 
 if ($frontendListener) {
-    # Si el usuario ya tenia un servidor en 5500, lo reutilizamos.
-    # No guardamos su PID para no cerrarlo cuando termine nuestro Debug.
-    Write-Host "[FRONT] El puerto $frontendPort ya esta activo. Se reutiliza el servidor existente."
-} else {
-    # Probamos primero python y luego el launcher py de Windows.
-    if (Get-Command python -ErrorAction SilentlyContinue) {
-        $pythonExe = (Get-Command python).Source
-        $pythonArgs = @("-m", "http.server", "$frontendPort", "--bind", "127.0.0.1")
-    } elseif (Get-Command py -ErrorAction SilentlyContinue) {
-        $pythonExe = (Get-Command py).Source
-        $pythonArgs = @("-3", "-m", "http.server", "$frontendPort", "--bind", "127.0.0.1")
-    } else {
-        throw "No se encontro Python 3. Instala Python o inicia el frontend manualmente en el puerto $frontendPort."
-    }
-
-    Write-Host "[FRONT] Iniciando servidor en http://localhost:$frontendPort ..."
-
-    # Start-Process desacopla el servidor del preLaunchTask.
-    # El script puede terminar y VS Code queda libre para iniciar Java Debug.
-    Start-Process `
-        -FilePath $pythonExe `
-        -ArgumentList $pythonArgs `
-        -WorkingDirectory $frontendPath `
-        -WindowStyle Hidden | Out-Null
-
-    # Esperamos hasta que el puerto quede realmente disponible y guardamos
-    # el PID del proceso que escucha. Asi Stop solo cierra nuestro servidor.
-    $frontendListener = $null
-    for ($i = 0; $i -lt 24; $i++) {
-        Start-Sleep -Milliseconds 250
-        $frontendListener = Get-NetTCPConnection -LocalPort $frontendPort -State Listen -ErrorAction SilentlyContinue |
-            Select-Object -First 1
-        if ($frontendListener) { break }
-    }
-
-    if (-not $frontendListener) {
-        throw "El frontend no pudo iniciar en el puerto $frontendPort."
-    }
-
-    Set-Content -Path $frontendPidFile -Value $frontendListener.OwningProcess
-    Write-Host "[FRONT] Listo en http://localhost:$frontendPort"
+    $owner = Get-Process -Id $frontendListener.OwningProcess -ErrorAction SilentlyContinue
+    $ownerName = if ($owner) { $owner.ProcessName } else { "PID $($frontendListener.OwningProcess)" }
+    throw "El puerto $frontendPort ya esta ocupado por $ownerName. Cierra ese servidor y vuelve a presionar F5 para garantizar que se sirva el frontend de esta carpeta."
 }
 
-# El navegador se abre desde otro proceso. Este watcher espera a que Spring
-# acepte conexiones en 8080 sin bloquear la tarea previa de VS Code.
+if (Get-Command python -ErrorAction SilentlyContinue) {
+    $pythonExe = (Get-Command python).Source
+    $pythonArgs = @("-m", "http.server", "$frontendPort", "--bind", "127.0.0.1")
+} elseif (Get-Command py -ErrorAction SilentlyContinue) {
+    $pythonExe = (Get-Command py).Source
+    $pythonArgs = @("-3", "-m", "http.server", "$frontendPort", "--bind", "127.0.0.1")
+} else {
+    throw "No se encontro Python 3. Instala Python o inicia el frontend manualmente en el puerto $frontendPort."
+}
+
+Write-Host "[FRONT] Carpeta: $frontendPath"
+Write-Host "[FRONT] Iniciando servidor limpio en http://localhost:$frontendPort ..."
+
+Start-Process `
+    -FilePath $pythonExe `
+    -ArgumentList $pythonArgs `
+    -WorkingDirectory $frontendPath `
+    -WindowStyle Hidden | Out-Null
+
+$frontendListener = $null
+for ($i = 0; $i -lt 24; $i++) {
+    Start-Sleep -Milliseconds 250
+    $frontendListener = Get-NetTCPConnection -LocalPort $frontendPort -State Listen -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($frontendListener) { break }
+}
+
+if (-not $frontendListener) {
+    throw "El frontend no pudo iniciar en el puerto $frontendPort."
+}
+
+Set-Content -Path $frontendPidFile -Value $frontendListener.OwningProcess
+Write-Host "[FRONT] Listo en http://localhost:$frontendPort"
+
+# El query string evita que el navegador reutilice index/CSS/JS de una version anterior.
+$frontendUrl = "http://localhost:$frontendPort/?ui=luxury-v5"
 $watcherScript = Join-Path $PSScriptRoot "open-browser-when-ready.ps1"
 $watcher = Start-Process `
     -FilePath "powershell.exe" `
@@ -77,7 +86,7 @@ $watcher = Start-Process `
         "-ExecutionPolicy", "Bypass",
         "-File", "`"$watcherScript`"",
         "-BackendPort", "$backendPort",
-        "-FrontendUrl", "http://localhost:$frontendPort"
+        "-FrontendUrl", "$frontendUrl"
     ) `
     -WindowStyle Hidden `
     -PassThru
