@@ -10,9 +10,15 @@ import java.util.List;
 /**
  * Logica de negocio del catalogo.
  *
- * @Cacheable hace que Spring envuelva este bean con un proxy dinamico.
- * La primera llamada ejecuta el metodo; las siguientes con la misma clave
- * se responden desde cache mientras la aplicacion siga levantada.
+ * La cache se queda en el service a proposito. Asi evitamos mezclarla con
+ * el Proxy y cada parte tiene una responsabilidad facil de explicar.
+ *
+ * Flujo de la primera llamada:
+ * Controller -> Service -> Proxy -> Repositorio real.
+ *
+ * Flujo de una llamada cacheada:
+ * Controller -> cache de Spring -> respuesta.
+ * En ese caso no hace falta llegar al Proxy ni repetir la consulta lenta.
  */
 @Service
 public class ProductoService {
@@ -23,12 +29,21 @@ public class ProductoService {
         this.productoRepository = productoRepository;
     }
 
-    @Cacheable(cacheNames = "productos", key = "'todos'")
+    /**
+     * Guarda el listado completo con una clave fija.
+     * sync=true evita que varias peticiones iguales carguen el mismo dato
+     * al mismo tiempo cuando todavia no existe una entrada en cache.
+     */
+    @Cacheable(cacheNames = "productos", key = "'todos'", sync = true)
     public List<Producto> listarTodos() {
         return productoRepository.listarTodos();
     }
 
-    @Cacheable(cacheNames = "productoPorId", key = "#id")
+    /**
+     * Cada producto se guarda usando su id como clave.
+     * Pedir dos veces el mismo id reutiliza el resultado mientras siga vigente.
+     */
+    @Cacheable(cacheNames = "productoPorId", key = "#id", sync = true)
     public Producto buscarPorId(Long id) {
         return productoRepository.buscarPorId(id);
     }

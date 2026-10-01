@@ -1,41 +1,55 @@
 # ISWZ2202 — Catálogo de productos
 
-Aplicación de práctica con **Java 17 + Spring Boot 3.3.4** para reforzar conceptos de diseño y arquitectura de software.
+Aplicación de práctica con **Java 17 + Spring Boot 3.3.4** para reforzar caché, patrón Proxy, CORS y una integración sencilla con frontend.
 
 La solución incluye:
 
 - API REST de productos.
 - Repositorio en memoria con latencia simulada de 1,5 segundos.
-- Caché con Spring Cache.
+- Spring Cache con **Caffeine**, expiración y límite de entradas.
 - Implementación explícita del patrón **Proxy**.
 - Configuración de **CORS** para desarrollo local.
-- Frontend sencillo en HTML, CSS y JavaScript sin dependencias externas.
+- Frontend en HTML, CSS y JavaScript.
+- Configuración de VS Code para iniciar backend, frontend y navegador desde **F5 / Debug**.
 
 ## 1. Requisitos
 
-- Java 17 o superior.
+- Java 17.
+- VS Code con **Extension Pack for Java**.
+- Python 3 para servir el frontend en desarrollo.
 - No es necesario instalar Maven: el proyecto incluye Maven Wrapper.
-- Para servir el frontend puedes usar Python 3, Live Server de VS Code o cualquier servidor HTTP local.
 
-## 2. Ejecutar el backend
+## 2. Ejecutar todo desde VS Code
 
-### macOS / Linux
+Abre la carpeta raíz del proyecto en VS Code, es decir, la carpeta que contiene `pom.xml`.
 
-```bash
-./mvnw spring-boot:run
-```
+Después:
 
-### Windows
+1. Ve a **Run and Debug**.
+2. Selecciona `Aplicacion completa (Backend + Frontend)`.
+3. Presiona **F5**.
 
-```bat
-mvnw.cmd spring-boot:run
-```
-
-La API queda disponible en:
+La configuración hace este flujo automáticamente:
 
 ```text
-http://localhost:8080
+F5
+ |
+ +--> inicia frontend en http://localhost:5500
+ |
+ +--> inicia Spring Boot en http://localhost:8080
+ |
+ +--> espera a que Tomcat este listo
+ |
+ +--> abre http://localhost:5500 en el navegador
 ```
+
+Al detener Debug, VS Code también detiene el servidor de frontend que inició para esa sesión.
+
+> Si el puerto 5500 ya estaba ocupado antes de presionar F5, la configuración reutiliza ese servidor y no lo cierra al terminar.
+
+También existe la opción `Backend solamente` para probar únicamente la API.
+
+## 3. API
 
 Endpoints:
 
@@ -46,40 +60,70 @@ GET http://localhost:8080/api/productos/{id}
 
 Ejemplos:
 
-```bash
-curl http://localhost:8080/api/productos
-curl http://localhost:8080/api/productos/1
+```text
+http://localhost:8080/api/productos
+http://localhost:8080/api/productos/1
 ```
 
-## 3. Caché
+## 4. Implementación de caché
 
-La caché se habilita con `@EnableCaching` en `DemoApplication`.
-
-En `ProductoService` se usan dos cachés:
-
-- `productos`: almacena el listado completo.
-- `productoPorId`: almacena cada producto según su ID.
-
-La primera consulta tarda aproximadamente 1,5 segundos porque llega al repositorio real. Una segunda consulta con la misma clave se responde desde memoria y debería ser mucho más rápida.
-
-Ejemplo:
-
-```bash
-curl http://localhost:8080/api/productos/1
-curl http://localhost:8080/api/productos/1
-```
-
-En la primera llamada aparecerán los mensajes del Proxy en consola. En la segunda normalmente no aparecerán porque Spring devuelve el valor directamente desde caché antes de llegar al repositorio.
-
-## 4. Patrón Proxy
-
-El contrato común es:
+La caché se configura en:
 
 ```text
-ProductoRepository
+src/main/java/com/udla/arquitectura/demo/config/CacheConfig.java
 ```
 
-Existen dos implementaciones relacionadas:
+Se utiliza **Caffeine** como implementación en memoria. La configuración tiene:
+
+- máximo de 100 entradas por caché;
+- expiración después de 10 minutos;
+- estadísticas internas habilitadas;
+- dos cachés separadas: `productos` y `productoPorId`.
+
+En `ProductoService` se usa `@Cacheable`:
+
+```text
+listarTodos()   -> cache "productos", clave "todos"
+buscarPorId(id) -> cache "productoPorId", clave id
+```
+
+También se usa `sync = true`. Si llegan varias peticiones iguales cuando la entrada todavía no existe, Spring evita que todas ejecuten a la vez la misma carga lenta.
+
+### Flujo sin caché
+
+```text
+Controller
+   |
+   v
+ProductoService
+   |
+   v
+ProductoRepositoryProxy
+   |
+   v
+RepositorioProductoEnMemoria
+   |
+   v
+~1500 ms
+```
+
+### Flujo cuando existe caché
+
+```text
+Controller
+   |
+   v
+Spring Cache
+   |
+   v
+respuesta
+```
+
+La segunda llamada no necesita llegar al Proxy ni al repositorio real.
+
+## 5. Implementación del patrón Proxy
+
+El contrato común es `ProductoRepository`.
 
 ```text
 ProductoService
@@ -88,43 +132,85 @@ ProductoService
 ProductoRepository
       |
       v
-ProductoRepositoryProxy  <-- @Primary
+ProductoRepositoryProxy   <-- @Primary
       |
       v
 RepositorioProductoEnMemoria
 ```
 
-`ProductoRepositoryProxy` implementa exactamente la misma interfaz que el repositorio real. Su responsabilidad es agregar trazabilidad y medir la duración de la operación antes de delegarla al objeto real.
+`ProductoRepositoryProxy` implementa la misma interfaz que el objeto real. El service no necesita saber qué implementación recibió.
 
-Gracias a `@Primary`, Spring inyecta el Proxy en `ProductoService`. El Proxy recibe el repositorio real usando `@Qualifier("productoRepositoryReal")`.
+El Proxy agrega comportamiento antes y después de delegar:
 
-Esto mantiene bajo acoplamiento: `ProductoService` conoce únicamente la abstracción `ProductoRepository`.
+- registra cuándo intercepta una operación;
+- registra cuándo delega al repositorio real;
+- mide cuánto tarda la operación;
+- registra errores sin ocultarlos;
+- finalmente devuelve exactamente el resultado del repositorio real.
 
-> Nota: Spring Cache también usa proxies internamente para interceptar llamadas a métodos anotados con `@Cacheable`. En este ejercicio se conserva además un Proxy explícito para que el patrón estructural sea visible en el código.
+La caché **no** se implementa dentro del Proxy. Se mantiene en la capa de servicio para que Proxy y Cache tengan responsabilidades separadas y sean fáciles de explicar.
 
-## 5. Frontend
-
-El frontend está dentro de:
+En consola, una consulta que llega al repositorio se ve parecido a esto:
 
 ```text
-frontend/
+[PROXY] listarTodos -> acceso interceptado
+[PROXY] listarTodos -> delegando al repositorio real
+[REPOSITORY] listarTodos -> simulando consulta lenta
+[PROXY] listarTodos -> respuesta recibida en 1500 ms
 ```
 
-No abras `index.html` directamente con `file://`, porque para esta práctica conviene ejecutarlo desde un origen HTTP independiente y observar el escenario real de CORS.
+Si repites inmediatamente la misma petición y sale desde caché, esos mensajes no vuelven a aparecer.
 
-### Opción A — Python
+## 6. CORS
 
-Desde la raíz del proyecto:
+Frontend y backend usan puertos diferentes:
+
+```text
+Frontend: http://localhost:5500
+Backend:  http://localhost:8080
+```
+
+Para el navegador son orígenes diferentes. La autorización de desarrollo está en:
+
+```text
+src/main/java/com/udla/arquitectura/demo/config/CorsConfig.java
+```
+
+Solo se habilitan orígenes locales conocidos y endpoints `/api/**`.
+
+## 7. Probar visualmente la caché
+
+1. Reinicia la aplicación con F5 para empezar con la caché vacía.
+2. La primera carga del catálogo tarda aproximadamente 1,5 segundos.
+3. Presiona **Recargar API**.
+4. La siguiente respuesta debería ser mucho más rápida.
+5. Abre el detalle de un producto.
+6. Ciérralo y abre el mismo producto otra vez.
+7. Compara el tiempo y los logs de la consola.
+
+El frontend mide el tiempo de respuesta, pero la evidencia más clara de la caché está en los logs: si la petición sale de caché, el Proxy y el repositorio no vuelven a ejecutarse.
+
+## 8. Ejecución manual
+
+Si quieres arrancar el backend sin Debug:
+
+### Windows
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+### macOS / Linux
 
 ```bash
+./mvnw spring-boot:run
+```
+
+Para el frontend:
+
+```powershell
 cd frontend
 python -m http.server 5500
-```
-
-En algunos sistemas el comando es:
-
-```bash
-python3 -m http.server 5500
 ```
 
 Después abre:
@@ -133,47 +219,19 @@ Después abre:
 http://localhost:5500
 ```
 
-### Opción B — VS Code Live Server
-
-Abre `frontend/index.html` con Live Server. Si usa el puerto 5500, funcionará con la configuración incluida.
-
-## 6. ¿Qué es el problema de CORS?
-
-El frontend y el backend se ejecutan en orígenes distintos:
+## 9. Estructura principal
 
 ```text
-Frontend: http://localhost:5500
-Backend:  http://localhost:8080
-```
+.vscode/
+├── launch.json
+├── tasks.json
+├── start-frontend.ps1
+└── stop-frontend.ps1
 
-Aunque ambos estén en la misma computadora, el puerto forma parte del origen. El navegador aplica la política de mismo origen y puede bloquear una petición `fetch` desde el frontend hacia el backend si este no la autoriza.
-
-La solución de desarrollo está en:
-
-```text
-src/main/java/com/udla/arquitectura/demo/config/CorsConfig.java
-```
-
-Se autorizan explícitamente varios orígenes locales habituales y únicamente los endpoints `/api/**`.
-
-Para producción no conviene habilitar `*` indiscriminadamente. Se debería autorizar únicamente el dominio real del frontend.
-
-## 7. Cómo comprobar la caché visualmente
-
-1. Levanta el backend.
-2. Levanta el frontend en el puerto 5500.
-3. La primera carga del catálogo tardará alrededor de 1,5 segundos.
-4. Presiona **Recargar API**.
-5. La siguiente respuesta debería ser mucho más rápida.
-6. Abre el detalle de un producto.
-7. Ciérralo y vuelve a abrir el mismo producto: la segunda petición debería reducir mucho su tiempo.
-
-## 8. Estructura principal
-
-```text
 src/main/java/com/udla/arquitectura/demo/
 ├── DemoApplication.java
 ├── config/
+│   ├── CacheConfig.java
 │   └── CorsConfig.java
 ├── controller/
 │   └── ProductoController.java
@@ -193,25 +251,12 @@ frontend/
 └── app.js
 ```
 
-## 9. Subir a GitHub
-
-Crea un repositorio vacío en tu cuenta de GitHub y, desde la raíz del proyecto, ejecuta:
-
-```bash
-git init
-git add .
-git commit -m "Implementa cache, proxy, CORS y frontend"
-git branch -M main
-git remote add origin https://github.com/TU-USUARIO/TU-REPOSITORIO.git
-git push -u origin main
-```
-
-Después copia la URL del repositorio y colócala en la consigna de la actividad.
-
 ## 10. Puntos para explicar en la entrega
 
-- **Cohesión:** cada clase mantiene una responsabilidad concreta.
-- **Bajo acoplamiento:** `ProductoService` depende de `ProductoRepository`, no del repositorio concreto.
-- **Proxy:** agrega comportamiento antes/después de delegar al repositorio real.
-- **Cache:** evita repetir operaciones costosas cuando la misma información ya fue obtenida.
-- **CORS:** es una restricción aplicada por el navegador entre orígenes diferentes; se resuelve autorizando desde el backend los orígenes necesarios.
+- **Caché:** evita repetir una operación costosa cuando ya existe un resultado válido.
+- **Caffeine:** pone límites y expiración a la caché en memoria.
+- **Proxy:** controla el acceso al repositorio real y agrega trazabilidad sin modificarlo.
+- **Bajo acoplamiento:** `ProductoService` depende de la interfaz `ProductoRepository`.
+- **Separación de responsabilidades:** la caché está en service y el Proxy se concentra en interceptar/delegar.
+- **CORS:** permite que el frontend de desarrollo en `5500` consuma la API en `8080`.
+- **Automatización:** VS Code inicia todo con F5 para evitar comandos manuales durante desarrollo.

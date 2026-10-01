@@ -20,7 +20,16 @@ target/
 .sts4-cache
 
 ### VS Code ###
-.vscode/
+# Guardamos la configuracion de ejecucion porque forma parte de la practica.
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/start-frontend.ps1
+!.vscode/stop-frontend.ps1
+.vscode/.frontend.pid
 
 ### macOS ###
 .DS_Store
+
+### Visual Studio ###
+.vs/

@@ -34,6 +34,12 @@
       <artifactId>spring-boot-starter-cache</artifactId>
     </dependency>
 
+    <!-- Cache en memoria con limite de tamano y expiracion -->
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+    </dependency>
+
     <!-- Recarga en caliente durante el desarrollo -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

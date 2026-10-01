@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Aplicacion completa (Backend + Frontend)",
+            "request": "launch",
+            "mainClass": "com.udla.arquitectura.demo.DemoApplication",
+            "preLaunchTask": "frontend: iniciar",
+            "postDebugTask": "frontend: detener",
+            "console": "internalConsole",
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "Tomcat started on port 8080.*",
+                "uriFormat": "http://localhost:5500"
+            }
+        },
+        {
+            "type": "java",
+            "name": "Backend solamente",
+            "request": "launch",
+            "mainClass": "com.udla.arquitectura.demo.DemoApplication",
+            "console": "internalConsole"
+        }
+    ]
+}

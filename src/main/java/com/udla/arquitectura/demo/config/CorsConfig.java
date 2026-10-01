@@ -5,11 +5,11 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * CORS para desarrollo local.
+ * CORS para el ambiente de desarrollo.
  *
- * El frontend corre en un origen distinto (por ejemplo localhost:5500)
- * al backend (localhost:8080). El navegador bloquea esas peticiones salvo
- * que el backend autorice explicitamente el origen.
+ * El frontend corre en localhost:5500 y el backend en localhost:8080.
+ * Como el puerto cambia, para el navegador son origenes distintos y el backend
+ * debe autorizar de forma explicita desde donde acepta peticiones.
  */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
@@ -17,6 +17,7 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
+                // Solo dejamos los origenes locales que usamos durante desarrollo.
                 .allowedOrigins(
                         "http://localhost:5500",
                         "http://127.0.0.1:5500",

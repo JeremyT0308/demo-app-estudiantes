@@ -1,3 +1,5 @@
+// Dejamos la URL de la API en un solo lugar para no repetirla por todo el front.
+// En desarrollo el frontend usa :5500 y Spring Boot usa :8080, por eso entra CORS.
 const API_URL = "http://localhost:8080/api/productos";
 
 const grid = document.querySelector("#productsGrid");
@@ -88,6 +90,8 @@ function formatPrice(value) {
     }).format(value);
 }
 
+// El contenido viene de la API. Escapamos texto antes de insertarlo en HTML
+// para no mezclar datos recibidos con etiquetas que el navegador pueda interpretar.
 function escapeHtml(value) {
     return String(value)
         .replaceAll("&", "&amp;")
@@ -105,4 +109,5 @@ grid.addEventListener("click", event => {
     if (button) showProduct(button.dataset.productId);
 });
 
+// Primera carga automatica apenas abre el navegador.
 loadProducts();
