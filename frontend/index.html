@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de productos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="hero">
+    <div class="hero__content">
+        <span class="eyebrow">ISWZ2202 · Spring Boot</span>
+        <h1>Catálogo de productos</h1>
+        <p>Frontend de desarrollo conectado a la API REST en <code>localhost:8080</code>.</p>
+    </div>
+</header>
+
+<main class="container">
+    <section class="toolbar" aria-label="Filtros">
+        <label class="search">
+            <span>Buscar</span>
+            <input id="searchInput" type="search" placeholder="Nombre o categoría..." autocomplete="off">
+        </label>
+        <button id="reloadButton" type="button">Recargar API</button>
+    </section>
+
+    <section class="status" aria-live="polite">
+        <span id="statusText">Cargando productos...</span>
+        <span id="requestTime"></span>
+    </section>
+
+    <section id="productsGrid" class="products" aria-label="Productos"></section>
+
+    <section id="emptyState" class="empty" hidden>
+        <h2>Sin resultados</h2>
+        <p>No encontramos productos que coincidan con la búsqueda.</p>
+    </section>
+</main>
+
+<dialog id="productDialog" class="dialog">
+    <button id="closeDialog" class="dialog__close" aria-label="Cerrar">×</button>
+    <div id="dialogContent"></div>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

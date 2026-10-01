@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 /**
  * Implementacion del repositorio. Simula una base de datos con latencia.
  */
-@Repository
+@Repository("productoRepositoryReal")
 public class RepositorioProductoEnMemoria implements ProductoRepository {
 
     private static final long LATENCIA_SIMULADA_MS = 1500;
